@@ -7,17 +7,17 @@ This is the offical repository for *Variational Information Pursuit for Interpre
 
 
 ## Overview
-<center>
+<p align="center">
 <img src="./assets/teaser.png" alt="teaser.png" width="500"/>
-</center>
+</p>
 
 There is a growing interest in the machine learning community in developing
 predictive algorithms that are “interpretable by design”. Towards this end, recent work proposes to make interpretable decisions by sequentially asking interpretable queries about data until a prediction can be made with high confidence based on the answers obtained (the history). To promote short query-answer
 chains, a greedy procedure called Information Pursuit (IP) is used, which adaptively chooses queries in order of information gain *(See Figure above)*. Generative models are employed to learn the distribution of query-answers and labels, which is in turn used to estimate the most informative query. However, learning and inference with a
 full generative model of the data is often intractable for complex tasks. In this work, we propose Variational Information Pursuit (V-IP), a variational characterization of IP which bypasses the need for learning generative models. V-IP is based on finding a query selection strategy and a classifier that minimizes the expected cross-entropy between true and predicted labels. We then demonstrate that the IP strategy is the optimal solution to this problem. Therefore, instead of learning generative models, we can use our optimal strategy to directly pick the most informative query given any history. We then develop a practical algorithm by defining a finite-dimensional parameterization of our strategy and classifier using deep networks and train them end-to-end using our objective. A pipeline of our framework is shown below.
-<center>
+<p align="center">
 <img src="./assets/pipeline.png" alt="pipeline" width="450"/>
-</center>
+</p>
 
 ## Requirements
 Please check out `requirements.txt` for detailed requirements. Overall, our code uses basic operations and do not require the latest version of PyTorch or CUDA to work. We also use `wandb` to moderate training and testing performance. One may remove lines related to `wandb` and switch to something different if they desire. 
