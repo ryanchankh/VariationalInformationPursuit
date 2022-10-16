@@ -45,8 +45,8 @@ def parseargs():
 def main(args):
     ## Setup
     # wandb
-    wandb.init(project="Variational-IP", name="mnist")
-    model_dir = os.path.join(args.save_dir, f'{wandb.run_id}')
+    run = wandb.init(project="Variational-IP", name="mnist")
+    model_dir = os.path.join(args.save_dir, f'{run.id}')
     os.makedirs(model_dir, exist_ok=True)
     utils.save_params(model_dir, vars(args))
     wandb.config.update(args)
