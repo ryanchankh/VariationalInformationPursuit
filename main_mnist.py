@@ -158,9 +158,9 @@ def main(args):
                 logits, queries = [], []
                 for i in range(args.max_queries_test):
                     query_vec = querier(test_inputs, mask)
-                    label_logits = classifier(test_inputs)
                     mask[np.arange(N), query_vec.argmax(dim=1)] = 1.0
                     test_inputs = ops.update_masked_image(test_inputs, test_images, query_vec, patch_size=PATCH_SIZE)
+                    label_logits = classifier(test_inputs)
                     logits.append(label_logits)
                     queries.append(query_vec)
                 acc_max = (label_logits.argmax(dim=1).float() == test_labels.squeeze()).float().mean().item() \
