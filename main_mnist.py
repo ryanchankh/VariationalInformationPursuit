@@ -65,7 +65,8 @@ def main(args):
     PATCH_SIZE = 3
 
     ## Data
-    transform = transforms.Compose([transforms.ToTensor(), Binarize()])
+    transform = transforms.Compose([transforms.ToTensor(),  
+                                    transforms.Lambda(lambda x: torch.where(x < 0.5, -1., 1.))])
     trainset = datasets.MNIST(args.data_dir, train=True, transform=transform, download=True)
     testset = datasets.MNIST(args.data_dir, train=False, transform=transform, download=True)
     trainloader = DataLoader(trainset, batch_size=args.batch_size, num_workers=4)
