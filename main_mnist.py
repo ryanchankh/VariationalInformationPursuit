@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torchvision.datasets as datasets
-import torchvision.trasnfroms as transforms
+import torchvision.transforms as transforms
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 from torch.utils.data import DataLoader
@@ -45,7 +45,7 @@ def parseargs():
 def main(args):
     ## Setup
     # wandb
-    wandb.init(project="Variational-IP", name="MNIST")
+    wandb.init(project="Variational-IP", name="mnist")
     model_dir = os.path.join(args.save_dir, f'{wandb.run_id}')
     os.makedirs(model_dir, exist_ok=True)
     utils.save_params(model_dir, vars(args))
