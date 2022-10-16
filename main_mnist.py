@@ -38,7 +38,7 @@ def parseargs():
     parser.add_argument('--name', type=str, default='mnist')
     parser.add_argument('--mode', type=str, default='online')
     parser.add_argument('--tail', type=str, default='', help='tail message')
-    parser.add_argument('--ckpt_path', type='str', default=None, help='load checkpoint')
+    parser.add_argument('--ckpt_path', type=str, default=None, help='load checkpoint')
     parser.add_argument('--save_dir', type=str, default='./saved/', help='save directory')
     parser.add_argument('--data_dir', type=str, default='./data/', help='save directory')
     args = parser.parse_args()
@@ -91,7 +91,7 @@ def main(args):
     tau_vals = np.linspace(args.tau_start, args.tau_end, args.epochs)
 
     ## Load checkpoint
-    if args.ckpt is not None:
+    if args.ckpt_path is not None:
         ckpt_dict = torch.load(args.ckpt_path, map_location='cpu')
         classifier.load_state_dict(ckpt_dict['classifier'])
         querier.load_state_dict(ckpt_dict['querier'])
