@@ -98,10 +98,10 @@ def main(args):
 
             # initial random sampling
             if args.sampling == 'adaptive':
-                num_queries = torch.randint(low=0, high=QUERY_ALL, size=(x.size(0),))
+                num_queries = torch.randint(low=0, high=QUERY_ALL, size=(images.size(0),))
                 mask, masked_image = adaptive_sampling(images, num_queries, querier, PATCH_SIZE)
             elif args.sampling == 'random':
-                mask = ops.random_sampling(args.max_queries, QUERY_ALL, images.shape[0]).to(device)
+                mask = ops.random_sampling(args.max_queries, QUERY_ALL, images.size(0)).to(device)
                 masked_image = ops.get_patch_mask(mask, images, patch_size=PATCH_SIZE)
 
             # Query and update
