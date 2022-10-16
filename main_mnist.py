@@ -150,7 +150,7 @@ def main(args):
                 acc_max = (label_logits.argmax(dim=1).float() == y.squeeze()).float().mean().item() * (
                             x.size(0) / len(testset))
                 logits = torch.stack(logits).permute(1, 0, 2)
-                queries_needed = utils.compute_queries_needed(logits, threshold=threshold)
+                queries_needed = ops.compute_queries_needed(logits, threshold=threshold)
                 test_pred_ip = logits[torch.arange(len(queries_needed)), queries_needed - 1].argmax(1)
                 acc_ip = (test_pred_ip == y.squeeze()).float().mean().item() * (x.size(0) / len(testset))
                 qry_need_avg = queries_needed.float().mean().item() * (x.size(0) / len(testset))
