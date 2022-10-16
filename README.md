@@ -66,5 +66,9 @@ where `<CKPT_PATH>` is the path to the pre-trained model using IRS.
 
 
 ## Cite
+If you find our work useful for your research, please cite:
 
+```
+arxiv
+```
 
