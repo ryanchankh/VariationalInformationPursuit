@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 
 
 
@@ -33,10 +34,9 @@ def get_patch_mask(mask, x, patch_size):
 
 
 def update_masked_image(masked_image, original_image, query_vec, patch_size):
-    masked_image = copy.deepcopy(masked_image)
     N, _, H, W = original_image.shape
 
-    query_vec = query_vec.view(x.size(0), 1, (H - patch_size + 1), (W - patch_size + 1))
+    query_vec = query_vec.view(N, 1, (H - patch_size + 1), (W - patch_size + 1))
 
     kernel = torch.ones(1, 1, patch_size, patch_size, requires_grad=False).cuda()
     # convoluting signal with kernel and applying padding

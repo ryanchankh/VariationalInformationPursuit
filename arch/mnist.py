@@ -90,7 +90,7 @@ class QuerierMNIST(nn.Module):
         self.maxpool1 = nn.MaxPool2d(2)
         self.maxpool2 = nn.MaxPool2d(2)
         self.relu = nn.LeakyReLU(negative_slope=0.3)
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=-1)
 
     def encode(self, x):
         x = self.relu(self.bnorm1(self.conv1(x)))

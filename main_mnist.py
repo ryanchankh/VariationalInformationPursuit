@@ -48,6 +48,7 @@ def main(args):
     run = wandb.init(project="Variational-IP", name="mnist", mode=args.mode)
     model_dir = os.path.join(args.save_dir, f'{run.id}')
     os.makedirs(model_dir, exist_ok=True)
+    os.makedirs(os.path.join(model_dir, 'ckpt'), exist_ok=True)
     utils.save_params(model_dir, vars(args))
     wandb.config.update(args)
 
@@ -63,6 +64,7 @@ def main(args):
     ## Constants
     QUERY_ALL = 676 # 26*26
     PATCH_SIZE = 3
+    THRESHOLD = 0.85
 
     ## Data
     transform = transforms.Compose([transforms.ToTensor(),  
@@ -105,12 +107,12 @@ def main(args):
             train_logits = classifier(masked_image)
 
             # backprop
-            loss = criterion(train_logits, y_train)
+            loss = criterion(train_logits, labels)
             loss.backward()
             optimizer.step()
 
             # logging
-            wand.log({
+            wandb.log({
                 'epoch': epoch,
                 'loss': loss.item(),
                 'lr': utils.get_lr(optimizer),
@@ -138,25 +140,25 @@ def main(args):
 
                 # Query
                 test_inputs = torch.zeros_like(test_images).to(device)
-                mask = torch.zeros(N, (H - PATCH_SZ + 1) * (W - PATCH_SZ + 1)).to(device)
+                mask = torch.zeros(N, QUERY_ALL).to(device)
                 logits, queries = [], []
                 for i in range(args.max_queries_test):
-                    query_vec = actor(test_inputs, mask)
+                    query_vec = querier(test_inputs, mask)
                     label_logits = classifier(test_inputs)
                     mask[np.arange(N), query_vec.argmax(dim=1)] = 1.0
-                    test_inputs = ops.update_masked_image(test_inputs, test_images, query_vec, patch_size=PATCH_SZ)
+                    test_inputs = ops.update_masked_image(test_inputs, test_images, query_vec, patch_size=PATCH_SIZE)
                     logits.append(label_logits)
                     queries.append(query_vec)
-                acc_max = (label_logits.argmax(dim=1).float() == y.squeeze()).float().mean().item() * (
-                            x.size(0) / len(testset))
+                acc_max = (label_logits.argmax(dim=1).float() == test_labels.squeeze()).float().mean().item() \
+				* (N / len(testset))
                 logits = torch.stack(logits).permute(1, 0, 2)
-                queries_needed = ops.compute_queries_needed(logits, threshold=threshold)
+                queries_needed = ops.compute_queries_needed(logits, threshold=THRESHOLD)
                 test_pred_ip = logits[torch.arange(len(queries_needed)), queries_needed - 1].argmax(1)
-                acc_ip = (test_pred_ip == y.squeeze()).float().mean().item() * (x.size(0) / len(testset))
-                qry_need_avg = queries_needed.float().mean().item() * (x.size(0) / len(testset))
-                qry_need_std = queries_needed.float().std().item() * (x.size(0) / len(testset))
+                acc_ip = (test_pred_ip == test_labels.squeeze()).float().mean().item() * (N / len(testset))
+                qry_need_avg = queries_needed.float().mean().item() * (N / len(testset))
+                qry_need_std = queries_needed.float().std().item() * (N / len(testset))
 
-            wand.log({
+            wandb.log({
                 'test_epoch': epoch,
                 'test_acc_max': acc_max,
                 'test_acc_ip': acc_ip,
