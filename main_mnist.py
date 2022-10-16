@@ -91,7 +91,7 @@ def main(args):
         for images, labels in trainloader:
             images = images.to(device)
             labels = labels.to(device)
-            querier.update_tau(tau)
+            querier.module.update_tau(tau)
 
             # initial random sampling
             mask = ops.sample_history(args.max_queries, QUERY_ALL)
