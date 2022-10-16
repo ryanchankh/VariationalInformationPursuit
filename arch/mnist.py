@@ -72,19 +72,19 @@ class QuerierMNIST(nn.Module):
 
         # Decoder
         self.deconv1 = torch.nn.Sequential(nn.Upsample(size=(10, 10), mode='nearest'),
-                                            nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1))
+                                           nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1))
         self.bnorm5 = nn.BatchNorm2d(128)
         self.deconv2 = torch.nn.Sequential(nn.Upsample(size=(12, 12), mode='nearest'),
-                                            nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1))
+                                           nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1))
         self.bnorm6 = nn.BatchNorm2d(64)
         self.deconv3 = torch.nn.Sequential(nn.Upsample(size=(26, 26), mode='nearest'),
-                                        nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1))
+                                           nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1))
         self.bnorm7 = nn.BatchNorm2d(32)
         self.decoded_image_pixels = torch.nn.Conv2d(32, 1, 1)
         self.unmaxpool1 = torch.nn.Sequential(nn.Upsample(scale_factor=2, mode='nearest'),
-                                                nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1))
+                                              nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1))
         self.unmaxpool2 = torch.nn.Sequential(nn.Upsample(scale_factor=2, mode='nearest'),
-                                                nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
+                                              nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
 
         # activations
         self.maxpool1 = nn.MaxPool2d(2)

@@ -61,7 +61,7 @@ def main(args):
     np.random.seed(args.seed)
 
     ## Constants
-    MAX_QUERIES_POSSIBLE = 676
+    QUERY_ALL = 676 # 26*26
     PATCH_SIZE = 3
 
     ## Data
@@ -75,7 +75,7 @@ def main(args):
     ## Model
     classifier = ClassifierMNIST()
     classifier = nn.DataParallel(classifier).to(device)
-    querier = QuerierMNIST(num_classes=MAX_QUERIES_ALL, use_resize_conv=True, tau=args.tau_start)
+    querier = QuerierMNIST(num_classes=QUERY_ALL, tau=args.tau_start)
     querier = nn.DataParallel(querier).to(device)
 
     ## Optimization
@@ -94,7 +94,7 @@ def main(args):
             querier.update_tau(tau)
 
             # initial random sampling
-            mask = ops.sample_history(args.max_queries, MAX_QUERIES_POSSIBLE)
+            mask = ops.sample_history(args.max_queries, QUERY_ALL)
             masked_image = ops.get_patch_mask(mask, images, patch_size=PATCH_SIZE)
 
             # Query and update
