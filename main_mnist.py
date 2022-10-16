@@ -97,8 +97,7 @@ def main(args):
             masked_image = ops.get_patch_mask(mask, images, patch_size=PATCH_SIZE)
 
             # Query and update
-            query_vec = actor(masked_image, mask)
-            query_vec = querier(X_train)
+            query_vec = querier(masked_image, mask)
             masked_image = utils.update_masked_image(masked_image, images, query_vec, patch_size=PATCH_SIZE)
 
             # prediction
