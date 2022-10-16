@@ -87,7 +87,7 @@ def main(args):
 
     ## Train
     for epoch in range(args.epochs):
-        tau = tau[epoch]
+        tau = tau_vals[epoch]
         for images, labels in trainloader:
             images = images.to(device)
             labels = labels.to(device)
