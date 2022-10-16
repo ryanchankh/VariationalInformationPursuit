@@ -46,7 +46,7 @@ def main(args):
     ## Setup
     # wandb
     wandb.init(project="Variational-IP", name="MNIST")
-    model_dir = os.path.join('./saved', f'{wandb.run_id}')
+    model_dir = os.path.join(args.save_dir, f'{wandb.run_id}')
     os.makedirs(model_dir, exist_ok=True)
     utils.save_params(model_dir, vars(args))
     wandb.config.update(args)
@@ -66,8 +66,8 @@ def main(args):
 
     ## Data
     transform = transforms.Compose([transforms.ToTensor(), Binarize()])
-    trainset = datasets.MNIST(data_dir, train=True, transform=transform, download=True)
-    testset = datasets.MNIST(data_dir, train=False, transform=transform, download=True)
+    trainset = datasets.MNIST(args.data_dir, train=True, transform=transform, download=True)
+    testset = datasets.MNIST(args.data_dir, train=False, transform=transform, download=True)
     trainloader = DataLoader(trainset, batch_size=args.batch_size, num_workers=4)
     testloader = DataLoader(testset, batch_size=args.batch_size, num_workers=4)
 
