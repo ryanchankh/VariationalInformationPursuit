@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn.functional as F
 
@@ -15,19 +16,19 @@ def random_sampling(max_queries_sample, max_queries_possible, num_samples):
 
     return mask
 
-def adaptive_sampling(x, num_queries, querier, patch_size):
+def adaptive_sampling(x, num_queries, querier, patch_size, max_queries):
     device = x.device
     N, C, H, W = x.shape
 
-    mask = torch.zeros(N, (H - PATCH_SZ + 1)*(W - PATCH_SZ + 1)).to(device)
-    final_mask = torch.zeros(N, (H - PATCH_SZ + 1)*(W - PATCH_SZ + 1)).to(device)
+    mask = torch.zeros(N, (H - patch_size + 1)*(W - patch_size + 1)).to(device)
+    final_mask = torch.zeros(N, (H - patch_size + 1)*(W - patch_size + 1)).to(device)
     patch_mask = torch.zeros((N, C, H, W)).to(device)
     final_patch_mask = torch.zeros((N, C, H, W)).to(device)
     sorted_indices = num_queries.argsort()
     counter = 0
 
     with torch.no_grad():
-        for i in range(MAX_QUERIES + 1):
+        for i in range(max_queries + 1):
             while (counter < N):
                 batch_index = sorted_indices[counter]
                 if i == num_queries[batch_index]:
