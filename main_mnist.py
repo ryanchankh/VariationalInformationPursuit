@@ -26,18 +26,15 @@ def parseargs():
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--data', type=str, default='mnist')
     parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--patch_size', type=int, default=4)
     parser.add_argument('--max_queries', type=int, default=676)
     parser.add_argument('--max_queries_test', type=int, default=20)
     parser.add_argument('--lr', type=float, default=0.05)
     parser.add_argument('--tau_start', type=float, default=1.0)
     parser.add_argument('--tau_end', type=float, default=0.2)
     parser.add_argument('--sampling', type=str, default='random')
-    parser.add_argument('--optimizer', type=str, default='sgd', help='optimizer')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--name', type=str, default='mnist')
     parser.add_argument('--mode', type=str, default='online')
-    parser.add_argument('--tail', type=str, default='', help='tail message')
     parser.add_argument('--ckpt_path', type='str', default=None, help='load checkpoint')
     parser.add_argument('--save_dir', type=str, default='./saved/', help='save directory')
     parser.add_argument('--data_dir', type=str, default='./data/', help='save directory')
@@ -108,7 +105,7 @@ def main(args):
             querier.module.update_tau(tau)
 
             # initial random sampling
-            if args.sampling == 'adaptive':
+            if args.sampling == 'baised':
                 num_queries = torch.randint(low=0, high=QUERY_ALL, size=(images.size(0),))
                 mask, masked_image = ops.adaptive_sampling(images, num_queries, querier, PATCH_SIZE, QUERY_ALL)
             elif args.sampling == 'random':
