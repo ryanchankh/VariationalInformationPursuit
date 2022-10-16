@@ -1,4 +1,4 @@
-def sample_history(max_queries_sample, max_queries_possible)
+def sample_history(max_queries_sample, max_queries_possible):
     num_queries = torch.randint(low=0, high=max_queries_sample, size=(x.size(0),))
     mask = torch.zeros(X_train.shape[0], max_queries_possible).to(device)
     
