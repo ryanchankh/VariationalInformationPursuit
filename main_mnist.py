@@ -35,8 +35,10 @@ def parseargs():
     parser.add_argument('--sampling', type=str, default='random')
     parser.add_argument('--optimizer', type=str, default='sgd', help='optimizer')
     parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--name', type=str, default='mnist')
     parser.add_argument('--mode', type=str, default='online')
     parser.add_argument('--tail', type=str, default='', help='tail message')
+    parser.add_argument('--ckpt_path', type='str', default=None, help='load checkpoint')
     parser.add_argument('--save_dir', type=str, default='./saved/', help='save directory')
     parser.add_argument('--data_dir', type=str, default='./data/', help='save directory')
     args = parser.parse_args()
@@ -46,7 +48,7 @@ def parseargs():
 def main(args):
     ## Setup
     # wandb
-    run = wandb.init(project="Variational-IP", name="mnist", mode=args.mode)
+    run = wandb.init(project="Variational-IP", name=args.name, mode=args.mode)
     model_dir = os.path.join(args.save_dir, f'{run.id}')
     os.makedirs(model_dir, exist_ok=True)
     os.makedirs(os.path.join(model_dir, 'ckpt'), exist_ok=True)
@@ -87,6 +89,15 @@ def main(args):
                            amsgrad=True, lr=args.lr)
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     tau_vals = np.linspace(args.tau_start, args.tau_end, args.epochs)
+
+    ## Load checkpoint
+    if args.ckpt is not None:
+        ckpt_dict = torch.load(args.ckpt_path, map_location='cpu')
+        classifier.load_state_dict(ckpt_dict['classifier'])
+        querier.load_state_dict(ckpt_dict['querier'])
+        optimizer.load_state_dict(ckpt_dict['optimizer'])
+        scheduler.load_state_dict(ckpt_dict['scheduler'])
+        print('Checkpoint Loaded!')
 
     ## Train
     for epoch in range(args.epochs):

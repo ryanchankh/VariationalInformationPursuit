@@ -89,7 +89,7 @@ def compute_queries_needed(logits, threshold):
     """
     assert 0 < threshold and threshold < 1, 'threshold should be between 0 and 1'
     n_samples, n_queries, _ = logits.shape
-    device = prob.device
+    device = logits.device
 
     # turn logits into probability and find queried prob.
     prob = F.softmax(logits, dim=2)
