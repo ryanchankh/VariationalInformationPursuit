@@ -1,6 +1,10 @@
-def sample_history(max_queries_sample, max_queries_possible):
-    num_queries = torch.randint(low=0, high=max_queries_sample, size=(x.size(0),))
-    mask = torch.zeros(X_train.shape[0], max_queries_possible).to(device)
+import torch
+
+
+
+def sample_history(max_queries_sample, max_queries_possible, num_samples):
+    num_queries = torch.randint(low=0, high=max_queries_sample, size=(num_samples, ))
+    mask = torch.zeros(num_samples, max_queries_possible)
     
     for code_ind, num in enumerate(num_queries):
         if num == 0:

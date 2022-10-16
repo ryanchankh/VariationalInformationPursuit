@@ -116,7 +116,7 @@ class QuerierMNIST(nn.Module):
         x = self.encode(x)
         x = self.decode(x)
 
-        query_logits = h1.view(-1, 26, 26)
+        query_logits = x.view(-1, 26*26)
         query_mask = torch.where(mask ==1, -1e9, 0.)
         query_logits = query_logits + query_mask.to(device)
         

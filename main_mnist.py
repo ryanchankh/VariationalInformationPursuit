@@ -45,7 +45,7 @@ def parseargs():
 def main(args):
     ## Setup
     # wandb
-    run = wandb.init(project="Variational-IP", name="mnist")
+    run = wandb.init(project="Variational-IP", name="mnist", mode=args.mode)
     model_dir = os.path.join(args.save_dir, f'{run.id}')
     os.makedirs(model_dir, exist_ok=True)
     utils.save_params(model_dir, vars(args))
@@ -94,12 +94,12 @@ def main(args):
             querier.module.update_tau(tau)
 
             # initial random sampling
-            mask = ops.sample_history(args.max_queries, QUERY_ALL)
+            mask = ops.sample_history(args.max_queries, QUERY_ALL, images.shape[0]).to(device)
             masked_image = ops.get_patch_mask(mask, images, patch_size=PATCH_SIZE)
 
             # Query and update
             query_vec = querier(masked_image, mask)
-            masked_image = utils.update_masked_image(masked_image, images, query_vec, patch_size=PATCH_SIZE)
+            masked_image = ops.update_masked_image(masked_image, images, query_vec, patch_size=PATCH_SIZE)
 
             # prediction
             train_logits = classifier(masked_image)
