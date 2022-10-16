@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 
 
-def sample_history(max_queries_sample, max_queries_possible, num_samples):
+def random_sampling(max_queries_sample, max_queries_possible, num_samples):
     num_queries = torch.randint(low=0, high=max_queries_sample, size=(num_samples, ))
     mask = torch.zeros(num_samples, max_queries_possible)
     
@@ -15,10 +15,38 @@ def sample_history(max_queries_sample, max_queries_possible, num_samples):
 
     return mask
 
+def adaptive_sampling(x, num_queries, querier, patch_size):
+    device = x.device
+    N, C, H, W = x.shape
+
+    mask = torch.zeros(N, (H - PATCH_SZ + 1)*(W - PATCH_SZ + 1)).to(device)
+    final_mask = torch.zeros(N, (H - PATCH_SZ + 1)*(W - PATCH_SZ + 1)).to(device)
+    patch_mask = torch.zeros((N, C, H, W)).to(device)
+    final_patch_mask = torch.zeros((N, C, H, W)).to(device)
+    sorted_indices = num_queries.argsort()
+    counter = 0
+
+    with torch.no_grad():
+        for i in range(MAX_QUERIES + 1):
+            while (counter < N):
+                batch_index = sorted_indices[counter]
+                if i == num_queries[batch_index]:
+                    final_mask[batch_index] = mask[batch_index]
+                    final_patch_mask[batch_index] = patch_mask[batch_index]
+                    counter += 1
+                else:
+                    break
+            if counter == N:
+                break
+            query_vec = querier(patch_mask, mask)
+            mask[np.arange(N), query_vec.argmax(dim=1)] = 1.0
+            patch_mask = update_masked_image(patch_mask, x, query_vec, patch_size)
+    return final_mask, final_patch_mask
+
 
 
 def get_patch_mask(mask, x, patch_size):
-    patch_mask = torch.zeros(x.size()).cuda()
+    patch_mask = torch.zeros(x.size()).to(x.device)
     for batch_index in range(mask.size(0)):
         positive_indices = torch.where(mask[batch_index] == 1)[0]
 
@@ -35,10 +63,11 @@ def get_patch_mask(mask, x, patch_size):
 
 def update_masked_image(masked_image, original_image, query_vec, patch_size):
     N, _, H, W = original_image.shape
+    device = masked_image.device
 
     query_vec = query_vec.view(N, 1, (H - patch_size + 1), (W - patch_size + 1))
 
-    kernel = torch.ones(1, 1, patch_size, patch_size, requires_grad=False).cuda()
+    kernel = torch.ones(1, 1, patch_size, patch_size, requires_grad=False).to(device)
     # convoluting signal with kernel and applying padding
     output = F.conv2d(query_vec, kernel, stride=1, padding=patch_size - 1, bias=None)
 
@@ -59,6 +88,7 @@ def compute_queries_needed(logits, threshold):
     """
     assert 0 < threshold and threshold < 1, 'threshold should be between 0 and 1'
     n_samples, n_queries, _ = logits.shape
+    device = prob.device
 
     # turn logits into probability and find queried prob.
     prob = F.softmax(logits, dim=2)
@@ -66,8 +96,8 @@ def compute_queries_needed(logits, threshold):
 
     # `decay` to multipled such that argmax finds
     #  the first nonzero that is above threshold.
-    threshold_indicator = (prob_max >= threshold).float().cuda()
-    decay = torch.linspace(10, 1, n_queries).unsqueeze(0).cuda()
+    threshold_indicator = (prob_max >= threshold).float().to(device)
+    decay = torch.linspace(10, 1, n_queries).unsqueeze(0).to(device)
     semantic_entropy = (threshold_indicator * decay).argmax(1)
 
     # `threshold_indicator`==0 is to check which

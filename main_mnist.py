@@ -2,7 +2,7 @@ import argparse
 import random
 import time
 import glob
-import tqdm
+from tqdm import tqdm   
 import os
 
 import numpy as np
@@ -32,6 +32,7 @@ def parseargs():
     parser.add_argument('--lr', type=float, default=0.05)
     parser.add_argument('--tau_start', type=float, default=1.0)
     parser.add_argument('--tau_end', type=float, default=0.2)
+    parser.add_argument('--adaptive', default=False, action='store_true')
     parser.add_argument('--optimizer', type=str, default='sgd', help='optimizer')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--mode', type=str, default='online')
@@ -90,14 +91,18 @@ def main(args):
     ## Train
     for epoch in range(args.epochs):
         tau = tau_vals[epoch]
-        for images, labels in trainloader:
+        for images, labels in tqdm(trainloader):
             images = images.to(device)
             labels = labels.to(device)
             querier.module.update_tau(tau)
 
             # initial random sampling
-            mask = ops.sample_history(args.max_queries, QUERY_ALL, images.shape[0]).to(device)
-            masked_image = ops.get_patch_mask(mask, images, patch_size=PATCH_SIZE)
+            if args.adaptive:
+                num_queries = torch.randint(low=0, high=QUERY_ALL, size=(x.size(0),))
+                mask, masked_image = adaptive_sampling(images, num_queries, querier, PATCH_SIZE)
+            else:
+                mask = ops.random_sampling(args.max_queries, QUERY_ALL, images.shape[0]).to(device)
+                masked_image = ops.get_patch_mask(mask, images, patch_size=PATCH_SIZE)
 
             # Query and update
             query_vec = querier(masked_image, mask)
@@ -133,7 +138,7 @@ def main(args):
 
         # evaluation
         if epoch % 10 == 0 or epoch == args.epochs - 1:
-            for test_images, test_labels in testloader:
+            for test_images, test_labels in tqdm(testloader):
                 test_images = test_images.to(device)
                 test_labels = test_labels.to(device)
                 N, H, C, W = test_images.shape
