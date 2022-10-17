@@ -108,6 +108,7 @@ def main(args):
             train_images = train_images.to(device)
             train_labels = train_labels.to(device)
             querier.module.update_tau(tau)
+            optimizer.zero_grad()
 
             # initial random sampling
             if args.sampling == 'baised':
@@ -166,8 +167,9 @@ def main(args):
                 mask = torch.zeros(N, QUERY_ALL).to(device)
                 logits, queries = [], []
                 for i in range(args.max_queries_test):
-                    query_vec = querier(test_inputs, mask)
-                    label_logits = classifier(test_inputs)
+                    with torch.no_grad():
+                        query_vec = querier(test_inputs, mask)
+                        label_logits = classifier(test_inputs)
 
                     mask[np.arange(N), query_vec.argmax(dim=1)] = 1.0
                     test_inputs = ops.update_masked_image(test_inputs, test_images, query_vec, patch_size=PATCH_SIZE)
