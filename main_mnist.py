@@ -28,7 +28,7 @@ def parseargs():
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--max_queries', type=int, default=676)
     parser.add_argument('--max_queries_test', type=int, default=20)
-    parser.add_argument('--lr', type=float, default=0.05)
+    parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--tau_start', type=float, default=1.0)
     parser.add_argument('--tau_end', type=float, default=0.2)
     parser.add_argument('--sampling', type=str, default='random')
