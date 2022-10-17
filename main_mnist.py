@@ -180,7 +180,7 @@ def main(args):
 
                 # accuracy using all queries
                 test_pred_max = logits[:, -1, :].argmax(dim=1).float()
-                test_acc_max = (test_pred_max == test_labels.squeeze()).float()
+                test_acc_max = (test_pred_max == test_labels.squeeze()).float().sum()
                 epoch_test_acc_max += test_acc_max
 
                 # compute query needed
@@ -189,7 +189,7 @@ def main(args):
 
                 # accuracy using IP
                 test_pred_ip = logits[torch.arange(len(qry_need)), qry_need-1].argmax(1)
-                test_acc_ip = (test_pred_ip == test_labels.squeeze()) / len(testset)
+                test_acc_ip = (test_pred_ip == test_labels.squeeze()).float().sum()
                 epoch_test_acc_ip += test_acc_ip
             epoch_test_acc_max = epoch_test_acc_max / len(testset)
             epoch_test_acc_ip = epoch_test_acc_ip / len(testset)
