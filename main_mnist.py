@@ -99,29 +99,33 @@ def main(args):
 
     ## Train
     for epoch in range(args.epochs):
+
+        # training
+        classifier.train()
+        querier.train()
         tau = tau_vals[epoch]
-        for images, labels in tqdm(trainloader):
-            images = images.to(device)
-            labels = labels.to(device)
+        for train_images, train_labels in tqdm(trainloader):
+            train_images = train_images.to(device)
+            train_labels = train_labels.to(device)
             querier.module.update_tau(tau)
 
             # initial random sampling
             if args.sampling == 'baised':
-                num_queries = torch.randint(low=0, high=QUERY_ALL, size=(images.size(0),))
-                mask, masked_image = ops.adaptive_sampling(images, num_queries, querier, PATCH_SIZE, QUERY_ALL)
+                num_queries = torch.randint(low=0, high=QUERY_ALL, size=(train_images.size(0),))
+                mask, masked_image = ops.adaptive_sampling(train_images, num_queries, querier, PATCH_SIZE, QUERY_ALL)
             elif args.sampling == 'random':
-                mask = ops.random_sampling(args.max_queries, QUERY_ALL, images.size(0)).to(device)
-                masked_image = ops.get_patch_mask(mask, images, patch_size=PATCH_SIZE)
+                mask = ops.random_sampling(args.max_queries, QUERY_ALL, train_images.size(0)).to(device)
+                masked_image = ops.get_patch_mask(mask, train_images, patch_size=PATCH_SIZE)
 
             # Query and update
             query_vec = querier(masked_image, mask)
-            masked_image = ops.update_masked_image(masked_image, images, query_vec, patch_size=PATCH_SIZE)
+            masked_image = ops.update_masked_image(masked_image, train_images, query_vec, patch_size=PATCH_SIZE)
 
             # prediction
             train_logits = classifier(masked_image)
 
             # backprop
-            loss = criterion(train_logits, labels)
+            loss = criterion(train_logits, train_labels)
             loss.backward()
             optimizer.step()
 
@@ -147,38 +151,60 @@ def main(args):
 
         # evaluation
         if epoch % 10 == 0 or epoch == args.epochs - 1:
+            classifier.eval()
+            querier.eval()
+            epoch_test_qry_need = []
+            epoch_test_acc_max = 0
+            epoch_test_acc_ip = 0
             for test_images, test_labels in tqdm(testloader):
                 test_images = test_images.to(device)
                 test_labels = test_labels.to(device)
                 N, H, C, W = test_images.shape
 
-                # Query
+                # Compute logits for all queries
                 test_inputs = torch.zeros_like(test_images).to(device)
                 mask = torch.zeros(N, QUERY_ALL).to(device)
                 logits, queries = [], []
                 for i in range(args.max_queries_test):
                     query_vec = querier(test_inputs, mask)
+                    label_logits = classifier(test_inputs)
+
                     mask[np.arange(N), query_vec.argmax(dim=1)] = 1.0
                     test_inputs = ops.update_masked_image(test_inputs, test_images, query_vec, patch_size=PATCH_SIZE)
-                    label_logits = classifier(test_inputs)
+                    
                     logits.append(label_logits)
                     queries.append(query_vec)
-                acc_max = (label_logits.argmax(dim=1).float() == test_labels.squeeze()).float().mean().item() \
-				* (N / len(testset))
                 logits = torch.stack(logits).permute(1, 0, 2)
-                queries_needed = ops.compute_queries_needed(logits, threshold=THRESHOLD)
-                test_pred_ip = logits[torch.arange(len(queries_needed)), queries_needed - 1].argmax(1)
-                acc_ip = (test_pred_ip == test_labels.squeeze()).float().mean().item() * (N / len(testset))
-                qry_need_avg = queries_needed.float().mean().item() * (N / len(testset))
-                qry_need_std = queries_needed.float().std().item() * (N / len(testset))
 
+                # accuracy using all queries
+                test_pred_max = logits[:, -1, :].argmax(dim=1).float()
+                test_acc_max = (test_pred_max == test_labels.squeeze()).float()
+                epoch_test_acc_max += test_acc_max
+
+                # compute query needed
+                qry_need = ops.compute_queries_needed(logits, threshold=THRESHOLD)
+                epoch_test_qry_need.append(qry_need)
+
+                # accuracy using IP
+                test_pred_ip = logits[torch.arange(len(qry_need)), qry_need-1].argmax(1)
+                test_acc_ip = (test_pred_ip == test_labels.squeeze()) / len(testset)
+                epoch_test_acc_ip += test_acc_ip
+            epoch_test_acc_max = epoch_test_acc_max / len(testset)
+            epoch_test_acc_ip = epoch_test_acc_ip / len(testset)
+
+            # mean and std of queries needed
+            epoch_test_qry_need = torch.hstack(epoch_test_qry_need).float()
+            qry_need_avg = epoch_test_qry_need.mean()
+            qry_need_std = epoch_test_qry_need.std()
+
+            # logging
             wandb.log({
                 'test_epoch': epoch,
-                'test_acc_max': acc_max,
-                'test_acc_ip': acc_ip,
+                'test_acc_max': epoch_test_acc_max,
+                'test_acc_ip': epoch_test_acc_ip,
                 'qry_need_avg': qry_need_avg,
                 'qry_need_std': qry_need_std
-                })
+            })
 
 
 if __name__ == '__main__':
