@@ -802,3 +802,5 @@ FodyWeavers.xsd
 ./saved/*
 ./data/*
 
+.DS_Store
+
