@@ -69,6 +69,11 @@ where `<CKPT_PATH>` is the path to the pre-trained model using IRS.
 If you find our work useful for your research, please cite:
 
 ```
-arxiv
+@article{chattopadhyay2023variational,
+  title={Variational Information Pursuit for Interpretable Predictions},
+  author={Chattopadhyay, Aditya and Chan, Kwan Ho Ryan and Haeffele, Benjamin D and Geman, Donald and Vidal, Ren{\'e}},
+  journal={arXiv preprint arXiv:2302.02876},
+  year={2023}
+}
 ```
 
