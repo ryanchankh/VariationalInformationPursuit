@@ -3,7 +3,7 @@
 ***Mathematical Institute for Data Science, Johns Hopkins University*** <br>
 **`{achatto1, kchan49, bhaeffele, geman, rvidal}jhu.edu`**
 
-This is the offical repository for *Variational Information Pursuit for Interpretable Predictions (2022)*. I am last updated on 16 October 2022. For our paper, please visit [link]().
+This is the offical repository for *Variational Information Pursuit for Interpretable Predictions (ICLR 2023)*.  For our paper, please visit [link](https://arxiv.org/abs/2207.00938).
 
 
 ## Overview
@@ -62,7 +62,7 @@ python3 main_mnist.py \
 ```
 where `<CKPT_PATH>` is the path to the pre-trained model using IRS.
 ## License
-
+This project is under the MIT License. See [LICENSE](./LISENSE.md) for details.
 
 
 ## Cite
