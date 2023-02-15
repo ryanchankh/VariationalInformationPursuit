@@ -5,6 +5,9 @@
 
 This is the offical repository for *Variational Information Pursuit for Interpretable Predictions (ICLR 2023)*.  For our paper, please visit [link](https://arxiv.org/abs/2207.00938).
 
+### Notes
+- [02-15-2023] We are still updating this repo for other datasets. For now, only MNIST is available. 
+
 
 ## Overview
 <p align="center">
@@ -20,7 +23,7 @@ full generative model of the data is often intractable for complex tasks. In thi
 </p>
 
 ## Requirements
-Please check out `requirements.txt` for detailed requirements. Overall, our code uses basic operations and do not require the latest version of PyTorch or CUDA to work. We also use `wandb` to moderate training and testing performance. One may remove lines related to `wandb` and switch to something different if they desire. 
+Please check out `requirements.txt` for detailed requirements. Overall, our code uses basic operations and do not require the latest version of PyTorch or CUDA to work. We also use `wandb` to moderate training and testing performance. One may remove lines related to `wandb` and switch to other packages if they desire. 
 
 
 ## Training
