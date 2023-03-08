@@ -801,6 +801,6 @@ FodyWeavers.xsd
 
 ./saved/*
 ./data/*
-
+pretrain/*
 .DS_Store
 

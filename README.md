@@ -64,6 +64,22 @@ python3 main_mnist.py \
   --name mnist_biased
 ```
 where `<CKPT_PATH>` is the path to the pre-trained model using IRS.
+
+## Checkpoints
+Checkpoint to the models used to obtain the results in our paper are listed in the table below. A jupyter notebook named `loading.ipynb` with checkpoint loading instructions for each dataset. is located in `pretrain/`. One may put downloaded models in this directory.
+<center>
+
+| Dataset | OneDrive Link |
+| --- | :-------: |
+| MNIST | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/Ec1de2HcJ9dMuT9ScOhFsfcBeZ25A55rAo7lkdUMQpQoMg?e=PFvayh) |
+| KMNIST | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/EX5CH3HbXA5Eo1yIC7JMswAB5GaanEcRBDtd-kSjHOCEXw?e=UdHQYi) |
+| Fashion MNIST | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/EbocJetI_vpNmMZ0w33cQHIBGiH8_nxOT75YbfjP5ma47g?e=kAEevd) |
+| Huffington News | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/ETe8rbzfY0BKh5EmHe-mx-sBRRd_1BROEHEJU58O57my3g?e=7tXnnn) |
+| CUB-200 | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/Eda0xGUGQ39Kl1d4LACN2agByKqByRMM0QZm6Rnibq4gBw?e=dXCcpw) |
+| CIFAR10 | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/ES_orEvtEc9Kjw4u1wgfiC8BvH7Y_6kaNVs-ZWvPqLcwjA?e=7a4Ylc) |
+
+</center>
+
 ## License
 This project is under the MIT License. See [LICENSE](./LISENSE.md) for details.
 

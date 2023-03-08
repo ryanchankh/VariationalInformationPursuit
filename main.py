@@ -39,6 +39,7 @@ def parseargs():
     parser.add_argument('--ckpt_path', type=str, default=None, help='load checkpoint')
     parser.add_argument('--save_dir', type=str, default='./saved/', help='save directory')
     parser.add_argument('--data_dir', type=str, default='./data/', help='save directory')
+    parser.add_argument('--ckpt_dir', type=bool, default=None, help='load checkpoint from this dir')
     args = parser.parse_args()
     return args
 

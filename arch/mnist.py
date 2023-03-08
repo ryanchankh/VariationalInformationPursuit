@@ -91,6 +91,8 @@ class QuerierMNIST(nn.Module):
         self.maxpool2 = nn.MaxPool2d(2)
         self.relu = nn.LeakyReLU(negative_slope=0.3)
         self.softmax = nn.Softmax(dim=-1)
+        
+        # self.stop_head = FeedFordward(num_classes=1)
 
     def encode(self, x):
         x = self.relu(self.bnorm1(self.conv1(x)))
@@ -125,3 +127,19 @@ class QuerierMNIST(nn.Module):
         query = (self.softmax(query_logits / 1e-9) - query).detach() + query
         return query
 
+
+
+class FeedFordward(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.fc1_1 = nn.Linear(256 * 4 * 4, 128)
+        self.fc2_1 = nn.Linear(128, num_classes)
+
+        self.bnorm_fc1_1 = nn.BatchNorm1d(128)
+        self.relu5 = nn.LeakyReLU(negative_slope=0.3)
+
+    def forward(self, h1):
+        h1 = self.relu5(self.fc1_1(h1))
+
+        pred_c = self.fc2_1(h1)
+        return pred_c
