@@ -14,7 +14,7 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 from torch.utils.data import DataLoader
 
-from arch.mnist import ClassifierMNIST, QuerierMNIST
+from arch.news import NetworkNews
 import dataset
 import ops
 import utils
@@ -44,33 +44,25 @@ def parseargs():
     args = parser.parse_args()
     return args
 
-def adaptive_sampling(x, num_queries, querier, patch_size, max_queries):
+
+def adaptive_sampling(x, max_queries, model):
+    model.requires_grad_(False)  # work around for unused parameter error
     device = x.device
-    N, C, H, W = x.shape
+    N, D = x.shape
+    
+    rand_history_length = torch.randint(low=0, high=max_queries, size=(N, )).to(device)
+    mask = torch.zeros((N, D), requires_grad=False).to(device)
+    for _ in range(max_queries + 1): # +1 because we start from empty history
+        masked_input = x * mask
+        with torch.no_grad(): 
+            query = model(masked_input, mask)
+                
+        # index only the rows smaller than rand_history_length
+        idx = mask.sum(1) <= rand_history_length
+        mask[idx] = mask[idx] + query[idx]
+    model.requires_grad_(True)  # work around for unused parameter error
+    return mask
 
-    mask = torch.zeros(N, (H - patch_size + 1)*(W - patch_size + 1)).to(device)
-    final_mask = torch.zeros(N, (H - patch_size + 1)*(W - patch_size + 1)).to(device)
-    patch_mask = torch.zeros((N, C, H, W)).to(device)
-    final_patch_mask = torch.zeros((N, C, H, W)).to(device)
-    sorted_indices = num_queries.argsort()
-    counter = 0
-
-    with torch.no_grad():
-        for i in range(max_queries + 1):
-            while (counter < N):
-                batch_index = sorted_indices[counter]
-                if i == num_queries[batch_index]:
-                    final_mask[batch_index] = mask[batch_index]
-                    final_patch_mask[batch_index] = patch_mask[batch_index]
-                    counter += 1
-                else:
-                    break
-            if counter == N:
-                break
-            query_vec = querier(patch_mask, mask)
-            mask[np.arange(N), query_vec.argmax(dim=1)] = 1.0
-            patch_mask = ops.update_masked_image(patch_mask, x, query_vec, patch_size)
-    return final_mask, final_patch_mask
 
 def main(args):
     ## Setup
@@ -90,27 +82,25 @@ def main(args):
     torch.manual_seed(args.seed)
     random.seed(args.seed)
     np.random.seed(args.seed)
-
-    ## Constants
-    N_QUERIES = 676 # 26*26
-    PATCH_SIZE = 3
+    
+    ## constants
+    N_CLASSES = 1000
+    N_QUERIES = 1000
     THRESHOLD = 0.85
 
     ## Data
-    trainset, testset = dataset.load_mnist(args.data_dir)
+    trainset, valset, testset, vocab, label_ids = dataset.load_news(args.data_dir)
     trainloader = DataLoader(trainset, batch_size=args.batch_size, num_workers=4)
+    valloader = DataLoader(valset, batch_size=args.batch_size, num_workers=4)
     testloader = DataLoader(testset, batch_size=args.batch_size, num_workers=4)
 
     ## Model
-    classifier = ClassifierMNIST()
-    classifier = nn.DataParallel(classifier).to(device)
-    querier = QuerierMNIST(num_classes=N_QUERIES, tau=args.tau_start)
-    querier = nn.DataParallel(querier).to(device)
+    classifier = NetworkNews(query_size=N_QUERIES, output_size=N_CLASSES)
+    querier = NetworkNews(query_size=N_QUERIES, output_size=N_QUERIES, eps=args.tau_start)
 
     ## Optimization
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(list(querier.parameters()) + list(classifier.parameters()), 
-                           amsgrad=True, lr=args.lr)
+    optimizer = optim.Adam(list(classifier) + list(querier), amsgrad=True, lr=args.lr)
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     tau_vals = np.linspace(args.tau_start, args.tau_end, args.epochs)
 
@@ -130,26 +120,26 @@ def main(args):
         classifier.train()
         querier.train()
         tau = tau_vals[epoch]
-        for train_images, train_labels in tqdm(trainloader):
-            train_images = train_images.to(device)
+        for train_features, train_labels in tqdm(trainloader):
+            train_features = train_features.to(device)
             train_labels = train_labels.to(device)
+            train_bs = train_features.shape[0]
             querier.module.update_tau(tau)
             optimizer.zero_grad()
 
             # initial random sampling
             if args.sampling == 'baised':
-                num_queries = torch.randint(low=0, high=N_QUERIES, size=(train_images.size(0),))
-                mask, masked_image = adaptive_sampling(train_images, num_queries, querier, PATCH_SIZE, N_QUERIES)
+                mask, masked_image = ops.adaptive_sampling(train_features, args.max_queries, querier)
             elif args.sampling == 'random':
-                mask = ops.random_sampling(args.max_queries, N_QUERIES, train_images.size(0)).to(device)
-                masked_image = ops.get_patch_mask(mask, train_images, patch_size=PATCH_SIZE)
-
+                mask = ops.sample_random_history(train_bs, N_QUERIES, args.max_queries).to(device)
+            history = train_features * mask
+            
             # Query and update
-            query_vec = querier(masked_image, mask)
-            masked_image = ops.update_masked_image(masked_image, train_images, query_vec, patch_size=PATCH_SIZE)
+            query = querier(history, mask)
+            updated_history = history + train_features * query
 
             # prediction
-            train_logits = classifier(masked_image)
+            train_logits = classifier(updated_history)
 
             # backprop
             loss = criterion(train_logits, train_labels)
@@ -183,25 +173,24 @@ def main(args):
             epoch_test_qry_need = []
             epoch_test_acc_max = 0
             epoch_test_acc_ip = 0
-            for test_images, test_labels in tqdm(testloader):
-                test_images = test_images.to(device)
+            for test_features, test_labels in tqdm(testloader):
+                test_features = test_features.to(device)
                 test_labels = test_labels.to(device)
-                N, H, C, W = test_images.shape
+                test_bs = test_features.shape[0]
 
                 # Compute logits for all queries
-                test_inputs = torch.zeros_like(test_images).to(device)
-                mask = torch.zeros(N, N_QUERIES).to(device)
+                test_inputs = torch.zeros_like(test_bs).to(device)
+                mask = torch.zeros(test_bs, N_QUERIES).to(device)
                 logits, queries = [], []
                 for i in range(args.max_queries_test):
                     with torch.no_grad():
-                        query_vec = querier(test_inputs, mask)
+                        query = querier(test_inputs, mask)
                         label_logits = classifier(test_inputs)
 
-                    mask[np.arange(N), query_vec.argmax(dim=1)] = 1.0
-                    test_inputs = ops.update_masked_image(test_inputs, test_images, query_vec, patch_size=PATCH_SIZE)
+                    mask[np.arange(test_bs), query.argmax(dim=1)] = 1.0
                     
                     logits.append(label_logits)
-                    queries.append(query_vec)
+                    queries.append(query)
                 logits = torch.stack(logits).permute(1, 0, 2)
 
                 # accuracy using all queries

@@ -4,7 +4,7 @@ import torch.nn as nn
 
 
 class NetworkNews(nn.Module):
-    def __init__(self, query_size=312, output_size=312, eps=None):
+    def __init__(self, query_size=312, output_size=312, tau=None):
         super().__init__()
         self.query_size = query_size
         self.output_dim = output_size
@@ -37,13 +37,13 @@ class NetworkNews(nn.Module):
             query_mask = torch.where(mask == 1, -1e9, 0.)
             query_logits = query_logits + query_mask.cuda()
 
-            query = self.softmax(query_logits / self.eps)
+            query = self.softmax(query_logits / self.tau)
 
             query = (self.softmax(query_logits / 1e-9) - query).detach() + query
             return query
 
-    def change_eps(self, eps):
-        self.eps = eps
+    def update_tau(self, tau):
+        self.tau = tau
 
 
 
