@@ -24,22 +24,22 @@ import wandb
 
 def parseargs():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--epochs', type=int, default=3000)
     parser.add_argument('--data', type=str, default='mnist')
     parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--max_queries', type=int, default=675)
-    parser.add_argument('--max_queries_test', type=int, default=20)
+    parser.add_argument('--max_queries', type=int, default=999)
+    parser.add_argument('--max_queries_test', type=int, default=50)
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--tau_start', type=float, default=1.0)
     parser.add_argument('--tau_end', type=float, default=0.2)
     parser.add_argument('--sampling', type=str, default='random')
     parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--name', type=str, default='mnist')
+    parser.add_argument('--name', type=str, default='news')
     parser.add_argument('--mode', type=str, default='online')
     parser.add_argument('--tail', type=str, default='', help='tail message')
     parser.add_argument('--ckpt_path', type=str, default=None, help='load checkpoint')
     parser.add_argument('--save_dir', type=str, default='./saved/', help='save directory')
-    parser.add_argument('--data_dir', type=str, default='./data/', help='save directory')
+    parser.add_argument('--data_dir', type=str, default='./data/news/', help='save directory')
     parser.add_argument('--ckpt_dir', type=bool, default=None, help='load checkpoint from this dir')
     args = parser.parse_args()
     return args
@@ -52,7 +52,7 @@ def adaptive_sampling(x, max_queries, model):
     
     rand_history_length = torch.randint(low=0, high=max_queries, size=(N, )).to(device)
     mask = torch.zeros((N, D), requires_grad=False).to(device)
-    for _ in range(max_queries + 1): # +1 because we start from empty history
+    for _ in range(max_queries): # +1 because we start from empty history
         masked_input = x * mask
         with torch.no_grad(): 
             query = model(masked_input, mask)
@@ -96,11 +96,13 @@ def main(args):
 
     ## Model
     classifier = NetworkNews(query_size=N_QUERIES, output_size=N_CLASSES)
-    querier = NetworkNews(query_size=N_QUERIES, output_size=N_QUERIES, eps=args.tau_start)
+    classifier = nn.DataParallel(classifier).cuda()
+    querier = NetworkNews(query_size=N_QUERIES, output_size=N_QUERIES, tau=args.tau_start)
+    querier = nn.DataParallel(querier).cuda()
 
     ## Optimization
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(list(classifier) + list(querier), amsgrad=True, lr=args.lr)
+    optimizer = optim.Adam(list(classifier.parameters()) + list(querier.parameters()), amsgrad=True, lr=args.lr)
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     tau_vals = np.linspace(args.tau_start, args.tau_end, args.epochs)
 
@@ -129,9 +131,9 @@ def main(args):
 
             # initial random sampling
             if args.sampling == 'baised':
-                mask, masked_image = ops.adaptive_sampling(train_features, args.max_queries, querier)
+                mask = ops.adaptive_sampling(train_features, args.max_queries, querier).to(device).float()
             elif args.sampling == 'random':
-                mask = ops.sample_random_history(train_bs, N_QUERIES, args.max_queries).to(device)
+                mask = ops.random_sampling(args.max_queries, N_QUERIES, train_bs).to(device).float()
             history = train_features * mask
             
             # Query and update
@@ -179,13 +181,12 @@ def main(args):
                 test_bs = test_features.shape[0]
 
                 # Compute logits for all queries
-                test_inputs = torch.zeros_like(test_bs).to(device)
                 mask = torch.zeros(test_bs, N_QUERIES).to(device)
                 logits, queries = [], []
                 for i in range(args.max_queries_test):
                     with torch.no_grad():
-                        query = querier(test_inputs, mask)
-                        label_logits = classifier(test_inputs)
+                        query = querier(test_features * mask, mask)
+                        label_logits = classifier(test_features * (mask + query))
 
                     mask[np.arange(test_bs), query.argmax(dim=1)] = 1.0
                     

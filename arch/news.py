@@ -13,7 +13,7 @@ class NetworkNews(nn.Module):
         self.layer3 = nn.Linear(1000, 500)
         self.classifier = nn.Linear(500, self.output_dim)
 
-        self.eps = eps
+        self.tau = tau
         self.current_max = 0
 
         self.norm1 = torch.nn.LayerNorm(2000)
@@ -22,14 +22,14 @@ class NetworkNews(nn.Module):
         # activations
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x, mask=None):
         x = self.relu(self.norm1(self.layer1(x)))
         x = self.relu(self.norm2(self.layer2(x)))
         x = self.relu(self.norm3(self.layer3(x)))
 
-        if self.eps == None:
+        if self.tau == None:
             return self.classifier(x)
 
         else:

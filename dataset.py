@@ -22,7 +22,8 @@ def load_news(root):
         label_ids, vocab = data["label_ids"], data["vocab"]
 
     # binarize by thresholding 0
-    x = torch.where((x > 0), torch.ones(x.size()), -torch.ones(x.size()))
+    x = np.where((x > 0), np.ones(x.shape), -np.ones(x.shape))
+    x = np.float32(x)
 
     # split into sub-datasets
     dataset = torch.utils.data.TensorDataset(torch.from_numpy(x), torch.from_numpy(y))
