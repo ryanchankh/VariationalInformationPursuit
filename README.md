@@ -5,9 +5,6 @@
 
 This is the offical repository for *Variational Information Pursuit for Interpretable Predictions (ICLR 2023)*.  For our paper, please visit [link](https://arxiv.org/abs/2207.00938).
 
-### Notes
-- [02-15-2023] We are still updating this repo for other datasets. For now, only MNIST is available. 
-
 
 ## Overview
 <p align="center">
@@ -26,7 +23,7 @@ full generative model of the data is often intractable for complex tasks. In thi
 Please check out `requirements.txt` for detailed requirements. Overall, our code uses basic operations and do not require the latest version of PyTorch or CUDA to work. We also use `wandb` to moderate training and testing performance. One may remove lines related to `wandb` and switch to other packages if they desire. 
 
 
-## Training
+## Training MNIST
 There are two stages of training: *Initial Random Sampling (IRS)* and *Subsequent Biased Sampling (SBS)*.
 
 To run IRS:
@@ -76,7 +73,7 @@ Checkpoint to the models used to obtain the results in our paper are listed in t
 | Fashion MNIST | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/EbocJetI_vpNmMZ0w33cQHIBGiH8_nxOT75YbfjP5ma47g?e=kAEevd) |
 | Huffington News | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/ETe8rbzfY0BKh5EmHe-mx-sBRRd_1BROEHEJU58O57my3g?e=7tXnnn) |
 | CUB-200 | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/Eda0xGUGQ39Kl1d4LACN2agByKqByRMM0QZm6Rnibq4gBw?e=dXCcpw) |
-| CUB-200 (concept) [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/Ef3cdrFhegRFuqePkJJvOk0Bacw_lkh4iWl8rXECb7UrxA?e=V64Q5V) |
+| CUB-200 (concept) | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/Ef3cdrFhegRFuqePkJJvOk0Bacw_lkh4iWl8rXECb7UrxA?e=V64Q5V) |  
 | CIFAR10 | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/ES_orEvtEc9Kjw4u1wgfiC8BvH7Y_6kaNVs-ZWvPqLcwjA?e=7a4Ylc) |
 | SymCAT200 | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/Edi9NVj6171DpfX4hgpJH3MB6xHxke2j7XRCunZKmb_CUw?e=SdTKxO) |
 | SymCAT300 | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/ERgvhBjxLj9GodXjFzGZTAAB4j0TP0EWd7EL1ZqL9eA_kQ?e=MAxemp) |
