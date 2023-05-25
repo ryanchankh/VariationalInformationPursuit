@@ -1,9 +1,12 @@
+import os
 import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+from torch.utils.data import Dataset
 import numpy as np
 import pickle
-    
+import pandas as pd
+from PIL import Image
     
     
 def load_mnist(root):
@@ -37,3 +40,63 @@ def load_news(root):
         torch.Generator().manual_seed(42),  # Use same seed to split data
     )
     return train, val, test, vocab, list(label_ids)
+
+
+class CUB200(Dataset):
+    """
+    Returns a compatible Torch Dataset object customized for the CUB dataset
+    """
+
+    def __init__(
+        self,
+        root,
+        image_dir='CUB_200_2011',
+        split='train',
+        transform=None,
+):
+        
+        self.root = root
+        self.image_dir = os.path.join(self.root, 'CUB', image_dir)
+        self.transform = transform
+
+        ## Image
+        pkl_file_path = os.path.join(self.root, 'CUB', f'{split}class_level_all_features.pkl')
+        self.data = []
+        with open(pkl_file_path, "rb") as f:
+            self.data.extend(pickle.load(f))
+            
+        ## Classes
+        self.classes = pd.read_csv(os.path.join(self.image_dir, 'classes.txt'))['idx species'].values
+
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        _dict = self.data[idx]
+
+        # image
+        img_path = _dict['img_path']
+        _idx = img_path.split("/").index("CUB_200_2011")
+        img_path = os.path.join(self.root, 'CUB/CUB_200_2011', *img_path.split("/")[_idx + 1 :])
+        img = Image.open(img_path).convert("RGB")
+        if self.transform:
+            img = self.transform(img)
+
+        # class label
+        class_label = _dict["class_label"]
+        return img, class_label
+
+
+def load_cub(root):    
+    transform = transforms.Compose(
+        [
+            transforms.CenterCrop(299),
+            transforms.ToTensor(),
+        ]
+    )
+    trainset = CUB200(root, image_dir='CUB_200_2011', split='train', transform=transform)
+    testset = CUB200(root, image_dir='CUB_200_2011', split='test', transform=transform)
+    valset = CUB200(root, image_dir='CUB_200_2011', split='val', transform=transform)
+    return trainset, valset, testset
+    

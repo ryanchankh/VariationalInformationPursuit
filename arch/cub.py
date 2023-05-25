@@ -8,7 +8,7 @@ import torchmetrics
 
 
 class NetworkCUB(nn.Module):
-    def __init__(self, query_size = 312, output_size=312, eps=None):
+    def __init__(self, query_size=312, output_size=312, tau=None):
         super().__init__()
         self.query_size = query_size
         self.output_dim = output_size
@@ -16,7 +16,7 @@ class NetworkCUB(nn.Module):
         self.layer2 = nn.Linear(2000, 500)
         self.classifier = nn.Linear(500, self.output_dim)
 
-        self.eps = eps
+        self.tau = tau
 
         self.norm1 = torch.nn.LayerNorm(2000)
         self.norm2 = torch.nn.LayerNorm(500)
@@ -29,7 +29,7 @@ class NetworkCUB(nn.Module):
         x = self.relu(self.norm1(self.layer1(x)))
         x = self.relu(self.norm2(self.layer2(x)))
 
-        if self.eps == None:
+        if self.tau == None:
          return self.classifier(x)
 
         else:
@@ -37,13 +37,13 @@ class NetworkCUB(nn.Module):
             query_mask = torch.where(mask == 1, -1e9, 0.)
             query_logits = query_logits + query_mask.cuda()
 
-            query = self.softmax(query_logits / self.eps)
+            query = self.softmax(query_logits / self.tau)
 
             query = (self.softmax(query_logits / 1e-9) - query).detach() + query
             return query
 
-    def change_eps(self, eps):
-        self.eps = eps
+    def change_tau(self, tau):
+        self.tau = tau
         
         
 
@@ -516,7 +516,7 @@ class BasicConv2d(nn.Module):
     def __init__(self, in_channels, out_channels, **kwargs):
         super().__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
-        self.bn = nn.BatchNorm2d(out_channels, eps=0.001)
+        self.bn = nn.BatchNorm2d(out_channels, tau=0.001)
 
     def forward(self, x):
         x = self.conv(x)
