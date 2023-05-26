@@ -32,7 +32,7 @@ def parseargs():
     parser.add_argument('--tau_end', type=float, default=0.2)
     parser.add_argument('--sampling', type=str, default='random')
     parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--name', type=str, default='news')
+    parser.add_argument('--name', type=str, default='cub')
     parser.add_argument('--mode', type=str, default='online')
     parser.add_argument('--tail', type=str, default='', help='tail message')
     parser.add_argument('--ckpt_path', type=str, default=None, help='load checkpoint')

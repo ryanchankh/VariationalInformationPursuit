@@ -8,6 +8,7 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 import torch.optim as optim
@@ -131,7 +132,7 @@ def main(args):
 
             # initial random sampling
             if args.sampling == 'baised':
-                mask = ops.adaptive_sampling(train_features, args.max_queries, querier).to(device).float()
+                mask = adaptive_sampling(train_features, args.max_queries, querier).to(device).float()
             elif args.sampling == 'random':
                 mask = ops.random_sampling(args.max_queries, N_QUERIES, train_bs).to(device).float()
             history = train_features * mask
