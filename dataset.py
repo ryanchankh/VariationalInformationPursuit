@@ -100,3 +100,21 @@ def load_cub(root):
     valset = CUB200(root, image_dir='CUB_200_2011', split='val', transform=transform)
     return trainset, valset, testset
     
+def load_cifar10(root):
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    trainset = datasets.CIFAR10(
+        root=root, train=True, download=True, transform=transform_train)
+    testset = datasets.CIFAR10(
+        root=root, train=False, download=True, transform=transform_test)
+    return trainset, testset

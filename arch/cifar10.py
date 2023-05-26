@@ -83,7 +83,7 @@ class Tree(nn.Module):
         return out
 
 class DLA(nn.Module):
-    def __init__(self, block=BasicBlock, num_classes=10, eps=None, resize_conv=False):
+    def __init__(self, block=BasicBlock, num_classes=10, tau=None, resize_conv=False):
         super(DLA, self).__init__()
         self.base = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False),
@@ -131,7 +131,7 @@ class DLA(nn.Module):
 
         else:
             self.linear = nn.Linear(512, num_classes)
-        self.eps = eps
+        self.tau = tau
         self.current_max = 0
         self.resize_conv = resize_conv
         self.softmax = nn.Softmax()
@@ -151,7 +151,7 @@ class DLA(nn.Module):
             out = self.relu(self.dnorm2(self.deconv2(out)))
             out = self.relu(self.dnorm3(self.deconv3(out)))
             out = self.deconv4(out)
-            if self.eps == None:
+            if self.tau == None:
                 sys.exit("ERROR, invalid input")
             else:
                 query_logits = out.flatten(1)
@@ -159,7 +159,7 @@ class DLA(nn.Module):
 
                 query_logits = query_logits + query_mask.cuda()
 
-                query = self.softmax(query_logits / self.eps)
+                query = self.softmax(query_logits / self.tau)
 
                 query = (self.softmax(query_logits / 1e-9) - query).detach() + query
                 return query
@@ -167,7 +167,7 @@ class DLA(nn.Module):
             out = F.avg_pool2d(out, 4)
             out = out.view(out.size(0), -1)
 
-            if self.eps == None:
+            if self.tau == None:
                 out = self.linear(out)
             else:
                 query_logits = self.linear(out)
@@ -175,14 +175,14 @@ class DLA(nn.Module):
 
                 query_logits = query_logits + query_mask.cuda()
 
-                query = self.softmax(query_logits / self.eps)
+                query = self.softmax(query_logits / self.tau)
 
                 query = (self.softmax(query_logits / 1e-9) - query).detach() + query
                 return query
             return out
 
-    def change_eps(self, eps):
-        self.eps = eps
+    def change_tau(self, tau):
+        self.tau = tau
 
 def test():
     net = DLA()
