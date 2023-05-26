@@ -134,7 +134,7 @@ class DLA(nn.Module):
         self.tau = tau
         self.current_max = 0
         self.resize_conv = resize_conv
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=-1)
         self.relu = nn.ReLU()
 
     def forward(self, x, mask=None):
@@ -181,7 +181,7 @@ class DLA(nn.Module):
                 return query
             return out
 
-    def change_tau(self, tau):
+    def update_tau(self, tau):
         self.tau = tau
 
 def test():
