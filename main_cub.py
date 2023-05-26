@@ -23,7 +23,7 @@ import wandb
 def parseargs():
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=3000)
-    parser.add_argument('--data', type=str, default='mnist')
+    parser.add_argument('--data', type=str, default='cub')
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--max_queries', type=int, default=311)
     parser.add_argument('--max_queries_test', type=int, default=50)
