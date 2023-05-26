@@ -94,6 +94,10 @@ def main(args):
 
     ## Model
     concept_net = CUBConceptModel.load_from_checkpoint('./pretrain/cub_concept.pth')
+    _ = concept_net.requires_grad_(False)
+    concept_net.eval()
+    concept_net.cuda()
+
     classifier = NetworkCUB(query_size=N_QUERIES, output_size=N_CLASSES)
     classifier = nn.DataParallel(classifier).cuda()
     querier = NetworkCUB(query_size=N_QUERIES, output_size=N_QUERIES, tau=args.tau_start)
@@ -126,7 +130,7 @@ def main(args):
             train_labels = train_labels.to(device)
             train_bs = train_images.shape[0]
             with torch.no_grad():
-                train_features = concept_net(train_images)
+                train_features = concept_net.net(train_images)
                 train_features = torch.where(train_features >= 0, 1., -1.)
             querier.module.update_tau(tau)
             optimizer.zero_grad()
@@ -184,7 +188,7 @@ def main(args):
 
                 # Compute query answers
                 with torch.no_grad():
-                    test_features = concept_net(test_images)
+                    test_features = concept_net.net(test_images)
                     test_features = torch.where(test_features >= 0, 1., -1.)
 
                 # Compute logits for all queries

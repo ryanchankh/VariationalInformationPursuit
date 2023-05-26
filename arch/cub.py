@@ -1,6 +1,7 @@
 import os
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils import model_zoo
 import pytorch_lightning as pl
 import torchmetrics
@@ -23,7 +24,7 @@ class NetworkCUB(nn.Module):
         # activations
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x, mask=None):
         x = self.relu(self.norm1(self.layer1(x)))
@@ -42,7 +43,7 @@ class NetworkCUB(nn.Module):
             query = (self.softmax(query_logits / 1e-9) - query).detach() + query
             return query
 
-    def change_tau(self, tau):
+    def update_tau(self, tau):
         self.tau = tau
         
         
@@ -516,7 +517,7 @@ class BasicConv2d(nn.Module):
     def __init__(self, in_channels, out_channels, **kwargs):
         super().__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
-        self.bn = nn.BatchNorm2d(out_channels, tau=0.001)
+        self.bn = nn.BatchNorm2d(out_channels, eps=0.001)
 
     def forward(self, x):
         x = self.conv(x)
