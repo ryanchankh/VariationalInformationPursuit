@@ -85,7 +85,7 @@ def main(args):
     np.random.seed(args.seed)
     
     ## constants
-    N_CLASSES = 1000
+    N_CLASSES = 10
     N_QUERIES = 1000
     THRESHOLD = 0.85
 
