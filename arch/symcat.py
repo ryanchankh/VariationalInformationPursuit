@@ -44,7 +44,7 @@ class NetworkSymCAT(nn.Module):
         # activations
         self.relu = nn.ReLU() #nn.LeakyReLU(negative_slope=0.3)
         self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=-1)
 
     def gen_histories(self, x, num_queries, max_queries):
         mask = torch.zeros(x.size()).cuda()

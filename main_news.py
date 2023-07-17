@@ -92,8 +92,8 @@ def main(args):
     ## Data
     trainset, valset, testset, vocab, label_ids = dataset.load_news(args.data_dir)
     trainloader = DataLoader(trainset, batch_size=args.batch_size, num_workers=4)
-    valloader = DataLoader(valset, batch_size=args.batch_size, num_workers=4)
-    testloader = DataLoader(testset, batch_size=args.batch_size, num_workers=4)
+    testloader = DataLoader(valset, batch_size=args.batch_size, num_workers=4)
+    # testloader    = DataLoader(testset, batch_size=args.batch_size, num_workers=4)
 
     ## Model
     classifier = NetworkNews(query_size=N_QUERIES, output_size=N_CLASSES)
@@ -103,8 +103,11 @@ def main(args):
 
     ## Optimization
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(list(classifier.parameters()) + list(querier.parameters()), amsgrad=True, lr=args.lr)
-    scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    if args.sampling == 'baised':
+        optimizer = optim.Adam(list(classifier.parameters()) + list(querier.parameters()), amsgrad=True, lr=args.lr)
+    elif args.sampling == 'random':
+        optimizer = optim.SGD(list(classifier.parameters()) + list(querier.parameters()), lr=1e-4, momentum=0.9)
+    scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
     tau_vals = np.linspace(args.tau_start, args.tau_end, args.epochs)
 
     ## Load checkpoint
