@@ -3,7 +3,7 @@
 ***Mathematical Institute for Data Science, Johns Hopkins University*** <br>
 **`{achatto1, kchan49, bhaeffele, geman, rvidal}jhu.edu`**
 
-This is the offical repository for *Variational Information Pursuit for Interpretable Predictions (ICLR 2023)*.  For our paper, please visit [link](https://arxiv.org/abs/2207.00938).
+This is the offical repository for *Variational Information Pursuit for Interpretable Predictions (ICLR 2023)*.  For our paper, please visit [link](https://arxiv.org/abs/2302.02876).
 
 
 ## Overview
