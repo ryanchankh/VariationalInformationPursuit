@@ -93,6 +93,7 @@ def load_cub(root):
         [
             transforms.CenterCrop(299),
             transforms.ToTensor(),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[2, 2, 2])
         ]
     )
     trainset = CUB200(root, image_dir='CUB_200_2011', split='train', transform=transform)

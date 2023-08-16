@@ -37,7 +37,7 @@ def parseargs():
     parser.add_argument('--tail', type=str, default='', help='tail message')
     parser.add_argument('--ckpt_path', type=str, default=None, help='load checkpoint')
     parser.add_argument('--save_dir', type=str, default='./saved/', help='save directory')
-    parser.add_argument('--data_dir', type=str, default='./data/news/', help='save directory')
+    parser.add_argument('--data_dir', type=str, default='./data/', help='save directory')
     parser.add_argument('--ckpt_dir', type=bool, default=None, help='load checkpoint from this dir')
     args = parser.parse_args()
     return args
@@ -88,7 +88,7 @@ def main(args):
 
     ## Data
     trainset, valset, testset = dataset.load_cub(args.data_dir)
-    trainloader = DataLoader(trainset, batch_size=args.batch_size, num_workers=4)
+    trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=4)
     valloader = DataLoader(valset, batch_size=args.batch_size, num_workers=4)
     testloader = DataLoader(testset, batch_size=args.batch_size, num_workers=4)
 
@@ -111,11 +111,11 @@ def main(args):
 
     ## Load checkpoint
     if args.ckpt_path is not None:
-        ckpt_dict = torch.load(args.ckpt_path, map_location='cpu')
-        classifier.load_state_dict(ckpt_dict['classifier'])
-        querier.load_state_dict(ckpt_dict['querier'])
-        optimizer.load_state_dict(ckpt_dict['optimizer'])
-        scheduler.load_state_dict(ckpt_dict['scheduler'])
+        classifier_ckpt_dict = torch.load('/cis/home/kchan49/Scalable_IP_Medical/saved_models/model_classifier_cub_finetune_seed3_best.pth', map_location='cpu')
+        querier_ckpt_dict = torch.load('/cis/home/kchan49/Scalable_IP_Medical/saved_models/model_actor_cub_finetune_seed3_best.pth', map_location='cpu')
+#        ckpt_dict = torch.load(args.ckpt_path, map_location='cpu')
+        classifier.load_state_dict(classifier_ckpt_dict)
+        querier.load_state_dict(querier_ckpt_dict)
         print('Checkpoint Loaded!')
 
     ## Train
@@ -189,7 +189,7 @@ def main(args):
                 # Compute query answers
                 with torch.no_grad():
                     test_features = concept_net.net(test_images)
-                    test_features = torch.where(test_features >= 0, 1., -1.)
+                    test_features = torch.where(test_features > 0., 1., -1.)
 
                 # Compute logits for all queries
                 mask = torch.zeros(test_bs, N_QUERIES).to(device)
@@ -197,10 +197,9 @@ def main(args):
                 for i in range(args.max_queries_test):
                     with torch.no_grad():
                         query = querier(test_features * mask, mask)
-                        label_logits = classifier(test_features * (mask + query))
+                        mask[np.arange(test_bs), query.argmax(dim=1)] = 1.0
+                        label_logits = classifier(test_features * mask) 
 
-                    mask[np.arange(test_bs), query.argmax(dim=1)] = 1.0
-                    
                     logits.append(label_logits)
                     queries.append(query)
                 logits = torch.stack(logits).permute(1, 0, 2)
