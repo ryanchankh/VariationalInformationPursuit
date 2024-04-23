@@ -27,7 +27,7 @@ def parseargs():
     parser.add_argument('--data', type=str, default='cifar10')
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--max_queries', type=int, default=48)
-    parser.add_argument('--max_queries_test', type=int, default=20)
+    parser.add_argument('--max_queries_test', type=int, default=21)
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--tau_start', type=float, default=1.0)
     parser.add_argument('--tau_end', type=float, default=0.2)
@@ -98,8 +98,8 @@ def update_masked_image(masked_image, original_image, query_vec, patch_size, str
 
     output = output * original_image
     modified_history = masked_image + output
-    modified_history = torch.clamp(modified_history, min=-1.0, max=1.0)
-
+    # modified_history = torch.clamp(modified_history, min=-1.0, max=1.0)
+    modified_history = torch.where(modified_history == 2*masked_image, masked_image.detach(), modified_history)
     return modified_history
 
 
@@ -127,7 +127,7 @@ def main(args):
     N_CLASSES = 10
     PATCH_SIZE = 8
     STRIDE = 4
-    THRESHOLD = 0.85
+    THRESHOLD = 0.127
 
     ## Data
     trainset, testset = dataset.load_cifar10(args.data_dir)
@@ -152,8 +152,10 @@ def main(args):
         ckpt_dict = torch.load(args.ckpt_path, map_location='cpu')
         classifier.load_state_dict(ckpt_dict['classifier'])
         querier.load_state_dict(ckpt_dict['querier'])
-        optimizer.load_state_dict(ckpt_dict['optimizer'])
-        scheduler.load_state_dict(ckpt_dict['scheduler'])
+        # classifier.load_state_dict(torch.load('/cis/home/kchan49/Scalable_IP_Medical/saved_models/model_classifier_biased_init_cifar10_best.pth'))
+        # querier.load_state_dict(torch.load('/cis/home/kchan49/Scalable_IP_Medical/saved_models/model_actor_biased_init_cifar10_best.pth'))
+        # optimizer.load_state_dict(ckpt_dict['optimizer'])
+        # scheduler.load_state_dict(ckpt_dict['scheduler'])
         print('Checkpoint Loaded!')
 
     ## Train
@@ -164,6 +166,7 @@ def main(args):
         querier.train()
         tau = tau_vals[epoch]
         for train_images, train_labels in tqdm(trainloader):
+            break
             train_images = train_images.to(device)
             train_labels = train_labels.to(device)
             querier.module.update_tau(tau)
@@ -200,7 +203,7 @@ def main(args):
         scheduler.step()
 
         # saving
-        if epoch % 10 == 0 or epoch == args.epochs - 1:
+        if False: #epoch % 10 == 0 or epoch == args.epochs - 1:
             torch.save({
                 'classifier': classifier.state_dict(),
                 'querier': querier.state_dict(),
@@ -210,7 +213,7 @@ def main(args):
                 os.path.join(model_dir, 'ckpt', f'epoch{epoch}.ckpt'))
 
         # evaluation
-        if epoch % 10 == 0 or epoch == args.epochs - 1:
+        if True: #epoch % 10 == 0 or epoch == args.epochs - 1:
             classifier.eval()
             querier.eval()
             epoch_test_qry_need = []
@@ -243,7 +246,7 @@ def main(args):
                 epoch_test_acc_max += test_acc_max
 
                 # compute query needed
-                qry_need = ops.compute_queries_needed(logits, threshold=THRESHOLD)
+                qry_need = ops.compute_queries_needed(logits.cpu(), THRESHOLD, mode='stability')
                 epoch_test_qry_need.append(qry_need)
 
                 # accuracy using IP
