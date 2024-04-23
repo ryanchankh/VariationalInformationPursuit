@@ -72,6 +72,7 @@ Checkpoint to the models used to obtain the results in our paper are listed in t
 | KMNIST | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/EX5CH3HbXA5Eo1yIC7JMswAB5GaanEcRBDtd-kSjHOCEXw?e=UdHQYi) |
 | Fashion MNIST | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/EbocJetI_vpNmMZ0w33cQHIBGiH8_nxOT75YbfjP5ma47g?e=kAEevd) |
 | Huffington News | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/ETe8rbzfY0BKh5EmHe-mx-sBRRd_1BROEHEJU58O57my3g?e=7tXnnn) |
+| Huffington News (cleaned)| [Link](git@github.com:ryanchankh/VariationalInformationPursuit.git)
 | CUB-200 | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/Eda0xGUGQ39Kl1d4LACN2agByKqByRMM0QZm6Rnibq4gBw?e=dXCcpw) |
 | CUB-200 (concept) | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/Ef3cdrFhegRFuqePkJJvOk0Bacw_lkh4iWl8rXECb7UrxA?e=V64Q5V) |  
 | CIFAR10 | [Link](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/kchan49_jh_edu/ES_orEvtEc9Kjw4u1wgfiC8BvH7Y_6kaNVs-ZWvPqLcwjA?e=7a4Ylc) |

@@ -19,7 +19,7 @@ def load_mnist(root):
 
 def load_news(root):
     # read data from pickle file
-    with open(f"{root}/processed/cleaned_categories10.pkl", "rb") as f:
+    with open(f"{root}/cleaned_categories10.pkl", "rb") as f:
         data = pickle.load(f)
         x, y = data["x"].toarray(), data["y"]
         label_ids, vocab = data["label_ids"], data["vocab"]
