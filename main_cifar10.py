@@ -152,8 +152,6 @@ def main(args):
         ckpt_dict = torch.load(args.ckpt_path, map_location='cpu')
         classifier.load_state_dict(ckpt_dict['classifier'])
         querier.load_state_dict(ckpt_dict['querier'])
-        # classifier.load_state_dict(torch.load('/cis/home/kchan49/Scalable_IP_Medical/saved_models/model_classifier_biased_init_cifar10_best.pth'))
-        # querier.load_state_dict(torch.load('/cis/home/kchan49/Scalable_IP_Medical/saved_models/model_actor_biased_init_cifar10_best.pth'))
         # optimizer.load_state_dict(ckpt_dict['optimizer'])
         # scheduler.load_state_dict(ckpt_dict['scheduler'])
         print('Checkpoint Loaded!')
@@ -166,7 +164,6 @@ def main(args):
         querier.train()
         tau = tau_vals[epoch]
         for train_images, train_labels in tqdm(trainloader):
-            break
             train_images = train_images.to(device)
             train_labels = train_labels.to(device)
             querier.module.update_tau(tau)
@@ -203,7 +200,7 @@ def main(args):
         scheduler.step()
 
         # saving
-        if False: #epoch % 10 == 0 or epoch == args.epochs - 1:
+        if epoch % 10 == 0 or epoch == args.epochs - 1:
             torch.save({
                 'classifier': classifier.state_dict(),
                 'querier': querier.state_dict(),
@@ -213,7 +210,7 @@ def main(args):
                 os.path.join(model_dir, 'ckpt', f'epoch{epoch}.ckpt'))
 
         # evaluation
-        if True: #epoch % 10 == 0 or epoch == args.epochs - 1:
+        if epoch % 10 == 0 or epoch == args.epochs - 1:
             classifier.eval()
             querier.eval()
             epoch_test_qry_need = []
