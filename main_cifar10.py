@@ -27,7 +27,7 @@ def parseargs():
     parser.add_argument('--data', type=str, default='cifar10')
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--max_queries', type=int, default=48)
-    parser.add_argument('--max_queries_test', type=int, default=20)
+    parser.add_argument('--max_queries_test', type=int, default=21)
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--tau_start', type=float, default=1.0)
     parser.add_argument('--tau_end', type=float, default=0.2)
@@ -98,8 +98,8 @@ def update_masked_image(masked_image, original_image, query_vec, patch_size, str
 
     output = output * original_image
     modified_history = masked_image + output
-    modified_history = torch.clamp(modified_history, min=-1.0, max=1.0)
-
+    # modified_history = torch.clamp(modified_history, min=-1.0, max=1.0)
+    modified_history = torch.where(modified_history == 2*masked_image, masked_image.detach(), modified_history)
     return modified_history
 
 
@@ -127,7 +127,7 @@ def main(args):
     N_CLASSES = 10
     PATCH_SIZE = 8
     STRIDE = 4
-    THRESHOLD = 0.85
+    THRESHOLD = 0.127
 
     ## Data
     trainset, testset = dataset.load_cifar10(args.data_dir)
@@ -152,8 +152,8 @@ def main(args):
         ckpt_dict = torch.load(args.ckpt_path, map_location='cpu')
         classifier.load_state_dict(ckpt_dict['classifier'])
         querier.load_state_dict(ckpt_dict['querier'])
-        optimizer.load_state_dict(ckpt_dict['optimizer'])
-        scheduler.load_state_dict(ckpt_dict['scheduler'])
+        # optimizer.load_state_dict(ckpt_dict['optimizer'])
+        # scheduler.load_state_dict(ckpt_dict['scheduler'])
         print('Checkpoint Loaded!')
 
     ## Train
@@ -243,7 +243,7 @@ def main(args):
                 epoch_test_acc_max += test_acc_max
 
                 # compute query needed
-                qry_need = ops.compute_queries_needed(logits, threshold=THRESHOLD)
+                qry_need = ops.compute_queries_needed(logits.cpu(), THRESHOLD, mode='stability')
                 epoch_test_qry_need.append(qry_need)
 
                 # accuracy using IP
