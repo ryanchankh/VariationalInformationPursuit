@@ -55,8 +55,8 @@ class SupervisedModel(pl.LightningModule):
         self.net = net
         self.loss_fn = loss_fn
 
-        self.train_acc = torchmetrics.Accuracy()
-        self.val_acc = torchmetrics.Accuracy()
+        # self.train_acc = torchmetrics.Accuracy()
+        # self.val_acc = torchmetrics.Accuracy()
         self.save_hyperparameters({"arch": arch, "net": repr(self.net)})
 
     def configure_optimizers(self):
