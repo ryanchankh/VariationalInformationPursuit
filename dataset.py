@@ -66,7 +66,7 @@ class CUB200(Dataset):
             self.data.extend(pickle.load(f))
             
         ## Classes
-        self.classes = pd.read_csv(os.path.join(self.image_dir, 'classes.txt'))['idx species'].values
+        self.classes = pd.read_csv(os.path.join(self.image_dir, 'classes.txt'), header=None).iloc[:, 0].values
 
 
     def __len__(self):

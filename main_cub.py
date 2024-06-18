@@ -38,7 +38,7 @@ def parseargs():
     parser.add_argument('--ckpt_path', type=str, default=None, help='load checkpoint')
     parser.add_argument('--save_dir', type=str, default='./saved/', help='save directory')
     parser.add_argument('--data_dir', type=str, default='./data/', help='save directory')
-    parser.add_argument('--ckpt_dir', type=bool, default=None, help='load checkpoint from this dir')
+    parser.add_argument('--ckpt_dir', type=bool, default='./pretrain/cub.pth', help='load checkpoint from this dir')
     args = parser.parse_args()
     return args
 
@@ -111,11 +111,9 @@ def main(args):
 
     ## Load checkpoint
     if args.ckpt_path is not None:
-        classifier_ckpt_dict = torch.load('/cis/home/kchan49/Scalable_IP_Medical/saved_models/model_classifier_cub_finetune_seed3_best.pth', map_location='cpu')
-        querier_ckpt_dict = torch.load('/cis/home/kchan49/Scalable_IP_Medical/saved_models/model_actor_cub_finetune_seed3_best.pth', map_location='cpu')
-#        ckpt_dict = torch.load(args.ckpt_path, map_location='cpu')
-        classifier.load_state_dict(classifier_ckpt_dict)
-        querier.load_state_dict(querier_ckpt_dict)
+        ckpt = torch.load('./pretrain/cub.pth', map_location='cpu')
+        classifier.load_state_dict(ckpt['classifier'])
+        querier.load_state_dict(ckpt['querier'])
         print('Checkpoint Loaded!')
 
     ## Train
